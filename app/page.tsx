@@ -4,7 +4,7 @@ export default function HomePage() {
   return <main className="min-h-screen bg-[#0a0d10] text-stone-100">
     <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
       <Link href="/" className="text-xl font-bold tracking-wide">EL KHAYAL <span className="text-amber-400">MOTOR&apos;S</span></Link>
-      <nav className="flex items-center gap-5 text-sm text-stone-300"><Link href="/catalog">الموتوسيكلات</Link><Link href="/auth/login">دخول الموظفين</Link></nav>
+      <nav className="flex items-center gap-5 text-sm text-stone-300"><Link href="/catalog">الموتوسيكلات</Link><Link href="/auth/login">تسجيل الدخول</Link><Link href="/auth/signup" className="rounded-lg border border-amber-300/40 px-3 py-2 text-amber-200">إنشاء حساب</Link></nav>
     </header>
     <section className="mx-auto grid min-h-[70vh] max-w-7xl items-center gap-10 px-6 py-20 md:grid-cols-2">
       <div><p className="mb-4 text-sm tracking-[.22em] text-amber-400">الخيال موتورز · خبرة وثقة</p>
