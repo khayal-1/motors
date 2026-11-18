@@ -47,3 +47,19 @@ describe('Phase 1 foundation safety contract', () => {
     expect(envExample).not.toContain('SUPABASE_SERVICE_ROLE_KEY');
   });
 });
+
+import { sanitizeCatalogSearch, formatPrice, formatMotorcycleStatus } from '../lib/catalog';
+
+describe('public catalog helpers', () => {
+  it('keeps Arabic search terms and strips PostgREST filter syntax', () => {
+    expect(sanitizeCatalogSearch('هوندا 125')).toBe('هوندا 125');
+    expect(sanitizeCatalogSearch('Honda,model.ilike.*')).toBe('Honda model ilike');
+    expect(sanitizeCatalogSearch('   ')).toBe('');
+  });
+
+  it('formats only public listing fields without exposing internal data', () => {
+    expect(formatPrice(125000)).toContain('١٢٥٬٠٠٠');
+    expect(formatMotorcycleStatus('Coming Soon')).toBe('قريبًا');
+    expect(formatMotorcycleStatus('Available')).toBe('متاحة');
+  });
+});

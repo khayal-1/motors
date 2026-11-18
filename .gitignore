@@ -17,3 +17,5 @@ coverage/
 *.log
 .vercel/
 .turbo/
+
+supabase/.temp/
