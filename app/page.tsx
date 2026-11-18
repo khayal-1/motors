@@ -9,8 +9,8 @@ export default function HomePage() {
     <section className="mx-auto grid min-h-[70vh] max-w-7xl items-center gap-10 px-6 py-20 md:grid-cols-2">
       <div><p className="mb-4 text-sm tracking-[.22em] text-amber-400">الخيال موتورز · خبرة وثقة</p>
         <h1 className="max-w-xl text-5xl font-black leading-tight md:text-7xl">اختار رحلتك<br/><span className="text-amber-400">من هنا.</span></h1>
-        <p className="mt-6 max-w-lg text-lg leading-8 text-stone-300">منصة متكاملة لعرض وإدارة الدراجات النارية. نجهّز الأساس الآن، وسيُضاف كتالوج المخزون بعد إعداد قاعدة البيانات.</p>
-        <Link className="mt-8 inline-flex rounded-md bg-amber-400 px-6 py-3 font-bold text-black" href="/catalog">استكشف الكتالوج</Link>
+        <p className="mt-6 max-w-lg text-lg leading-8 text-stone-300">تصفّح الكتالوج، أرسل استفسار شراء، أو اطلب استيراد دراجة بالمواصفات التي تناسبك.</p>
+        <div className="mt-8 flex flex-wrap gap-3"><Link className="inline-flex rounded-md bg-amber-400 px-6 py-3 font-bold text-black" href="/catalog">استكشف الكتالوج</Link><Link className="inline-flex rounded-md border border-white/15 px-6 py-3 font-bold text-stone-100" href="/requests/import">اطلب استيراد دراجة</Link></div>
       </div>
       <div className="relative flex min-h-72 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-stone-800 via-neutral-900 to-black p-8">
         <div className="absolute -left-10 -top-10 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />

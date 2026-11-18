@@ -49,7 +49,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           <Link href="/" className="text-lg font-bold tracking-wide">EL KHAYAL <span className="text-amber-400">MOTOR&apos;S</span></Link>
           <nav className="flex items-center gap-5 text-sm text-stone-300" aria-label="التنقل الرئيسي">
             <Link href="/catalog" aria-current="page" className="text-amber-300">الكتالوج</Link>
-            <Link href="/auth/login">تسجيل الدخول</Link><Link href="/auth/signup">إنشاء حساب</Link>
+            <Link href="/auth/login">تسجيل الدخول</Link><Link href="/requests/import">طلب استيراد</Link><Link href="/auth/signup">إنشاء حساب</Link>
           </nav>
         </header>
 

@@ -45,7 +45,7 @@ export default async function MotorcycleDetailPage({ params }: { params: Promise
               {bike.engine_type && <div><dt className="text-sm text-stone-500">نوع المحرك</dt><dd className="mt-2 text-lg">{bike.engine_type}</dd></div>}
             </dl>
             {bike.description && <section className="mt-8 border-t border-white/10 pt-7"><h2 className="text-lg font-bold">التفاصيل</h2><p className="mt-3 whitespace-pre-line leading-8 text-stone-300">{bike.description}</p></section>}
-            <p className="mt-8 border-t border-white/10 pt-6 text-sm leading-7 text-stone-400">للاستفسار عن هذه الدراجة، تواصل مع المعرض. لا تُعرض بيانات الشاسيه أو المحرك التسلسلية في الكتالوج العام.</p>
+            <div className="mt-8 flex flex-wrap items-center gap-4 border-t border-white/10 pt-6"><Link href={`/requests/purchase?motorcycle_id=${bike.id}`} className="rounded-lg bg-amber-400 px-5 py-3 font-bold text-black">استفسر عن الشراء</Link><p className="text-sm leading-7 text-stone-400">الطلب لا يحجز الدراجة ولا يلزمك بالشراء. لا تُعرض بيانات الشاسيه أو المحرك التسلسلية.</p></div>
           </div>
         </div>
         <footer className="border-t border-white/10 py-6 text-center text-sm text-stone-500">El Khayal Motor&apos;s · الخيال موتورز</footer>
