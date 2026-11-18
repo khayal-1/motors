@@ -1,12 +1,10 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { createImportRequestAction } from '@/app/actions/requests';
-import { requireUser } from '@/lib/auth/permissions';
+import { requireCustomer } from '@/lib/auth/permissions';
 
 export default async function ImportRequestPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams;
-  const { user } = await requireUser();
-  if (!user) redirect('/auth/login?next=%2Frequests%2Fimport');
+  await requireCustomer('/requests/import');
   return <main dir="rtl" className="min-h-screen bg-[#0a0d10] px-5 py-10 text-stone-100"><div className="mx-auto max-w-3xl"><header className="flex items-center justify-between border-b border-white/10 pb-5"><Link href="/" className="font-bold">EL KHAYAL <span className="text-amber-400">MOTOR&apos;S</span></Link><nav className="flex gap-4 text-sm"><Link href="/catalog" className="text-amber-200">الكتالوج</Link><Link href="/requests" className="text-stone-300">طلباتي</Link></nav></header>
     <h1 className="mt-10 text-3xl font-black">طلب استيراد</h1><p className="mt-3 leading-7 text-stone-300">اكتب المواصفات التي تبحث عنها؛ سيتواصل فريق المعرض بعد مراجعة طلبك. إرسال الطلب لا يعني تأكيد التوفر أو السعر.</p>
     {params.error && <p role="alert" className="mt-5 rounded-lg border border-rose-300/30 p-4 text-rose-200">تعذّر إرسال الطلب. أدخل الماركة أو الموديل على الأقل، وراجع نطاقات السنوات والميزانية.</p>}

@@ -1,6 +1,5 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { requireUser } from '@/lib/auth/permissions';
+import { requireCustomer } from '@/lib/auth/permissions';
 
 const statusLabels: Record<string, string> = {
   pending: 'بانتظار المراجعة', in_review: 'قيد المراجعة', approved: 'تمت الموافقة',
@@ -9,8 +8,7 @@ const statusLabels: Record<string, string> = {
 
 export default async function RequestsPage({ searchParams }: { searchParams: Promise<{ created?: string }> }) {
   const params = await searchParams;
-  const { supabase, user } = await requireUser();
-  if (!user) redirect('/auth/login?next=%2Frequests');
+  const { supabase, user } = await requireCustomer('/requests');
   const [purchases, imports] = await Promise.all([
     supabase.from('purchase_requests').select('id,motorcycle_id,message,status,created_at').eq('customer_id', user.id).order('created_at', { ascending: false }).limit(50),
     supabase.from('import_requests').select('id,desired_brand,desired_model,year_min,year_max,status,created_at').eq('customer_id', user.id).order('created_at', { ascending: false }).limit(50),

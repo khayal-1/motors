@@ -1,7 +1,6 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { createPurchaseRequestAction } from '@/app/actions/requests';
-import { requireUser } from '@/lib/auth/permissions';
+import { requireCustomer } from '@/lib/auth/permissions';
 import { safeNextPath } from '@/lib/auth/redirect';
 import { formatPrice, type PublicMotorcycle } from '@/lib/catalog';
 
@@ -12,8 +11,7 @@ export default async function PurchaseRequestPage({ searchParams }: { searchPara
   const params = await searchParams;
   const motorcycleId = typeof params.motorcycle_id === 'string' ? params.motorcycle_id : '';
   const next = safeNextPath(`/requests/purchase?motorcycle_id=${encodeURIComponent(motorcycleId)}`, '/requests');
-  const { supabase, user } = await requireUser();
-  if (!user) redirect(`/auth/login?next=${encodeURIComponent(next)}`);
+  const { supabase } = await requireCustomer(next);
   if (!uuidPattern.test(motorcycleId)) {
     return <main dir="rtl" className="min-h-screen bg-[#0a0d10] px-5 py-10 text-stone-100"><div className="mx-auto max-w-3xl"><RequestsHeader /><h1 className="mt-10 text-3xl font-black">طلب شراء</h1><p className="mt-4 text-stone-300">ابدأ باختيار دراجة من الكتالوج، ثم أرسل طلب الاستفسار عنها.</p><Link href="/catalog" className="mt-6 inline-flex rounded-lg bg-amber-400 px-5 py-3 font-bold text-black">افتح الكتالوج</Link></div></main>;
   }

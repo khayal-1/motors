@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { requireUser } from '@/lib/auth/permissions';
+import { requireCustomer } from '@/lib/auth/permissions';
 import { safeNextPath } from '@/lib/auth/redirect';
 import { importRequestSchema, purchaseRequestSchema } from '@/lib/requests/validation';
 
@@ -13,8 +13,7 @@ function formValue(formData: FormData, name: string): string {
 export async function createPurchaseRequestAction(formData: FormData) {
   const motorcycleId = formValue(formData, 'motorcycleId');
   const next = safeNextPath(`/requests/purchase?motorcycle_id=${encodeURIComponent(motorcycleId)}`, '/requests');
-  const { supabase, user } = await requireUser();
-  if (!user) redirect(`/auth/login?next=${encodeURIComponent(next)}`);
+  const { supabase, user } = await requireCustomer(next);
 
   const parsed = purchaseRequestSchema.safeParse({
     motorcycleId,
@@ -34,8 +33,7 @@ export async function createPurchaseRequestAction(formData: FormData) {
 
 export async function createImportRequestAction(formData: FormData) {
   const next = '/requests/import';
-  const { supabase, user } = await requireUser();
-  if (!user) redirect(`/auth/login?next=${encodeURIComponent(next)}`);
+  const { supabase, user } = await requireCustomer(next);
 
   const parsed = importRequestSchema.safeParse({
     desiredBrand: formValue(formData, 'desiredBrand'),

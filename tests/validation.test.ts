@@ -3,8 +3,38 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const migration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261118180000_foundation.sql'), 'utf8');
+const teamMigration = readFileSync(resolve(process.cwd(), 'supabase/migrations/20261118193000_staff_role_management.sql'), 'utf8');
 const gitignore = readFileSync(resolve(process.cwd(), '.gitignore'), 'utf8');
 const envExample = readFileSync(resolve(process.cwd(), '.env.example'), 'utf8');
+
+describe('Owner-only team and identity security contract', () => {
+  it('does not promote public registrations beyond Customer and records explicit policy acceptance', () => {
+    expect(teamMigration).toContain("r.key = 'customer'");
+    expect(teamMigration).toContain("new.raw_user_meta_data ->> 'terms_accepted' = 'true'");
+    expect(teamMigration).toContain('terms_accepted_at');
+    expect(teamMigration).toContain('Customer registration requires full identity and policy acceptance.');
+    expect(teamMigration).toContain("if account_type_value = 'customer' then");
+    expect(teamMigration).toContain("if account_type_value in ('staff_invite','initial_owner')");
+    expect(teamMigration).toContain('phone_login_index');
+  });
+
+  it('reserves staff and role-permission writes to the Owner and hides staff profiles under RLS', () => {
+    expect(teamMigration).toContain('create policy "user_roles_insert_by_owner"');
+    expect(teamMigration).toContain('public.can_manage_user_role(user_id, role_id)');
+    expect(teamMigration).toContain('create policy "role_permissions_manage_by_owner"');
+    expect(teamMigration).toContain('public.is_customer_profile(profiles.id)');
+    expect(teamMigration).toContain('purchase_requests_create_customer_pending');
+    expect(teamMigration).toContain('import_requests_create_customer_pending');
+    expect(teamMigration).toContain('public.is_customer_profile((select auth.uid()))');
+    expect(teamMigration).toContain("r.key not in ('owner','customer')");
+  });
+
+  it('makes initial Owner setup service-only and serialized', () => {
+    expect(teamMigration).toContain("if auth.role() <> 'service_role'");
+    expect(teamMigration).toContain('pg_advisory_xact_lock');
+    expect(teamMigration).toContain('grant execute on function public.bootstrap_initial_owner(uuid) to service_role');
+  });
+});
 
 describe('Phase 1 foundation safety contract', () => {
   it('uses relational extensible role and permission tables, not fixed app roles', () => {
@@ -44,7 +74,9 @@ describe('Phase 1 foundation safety contract', () => {
     expect(gitignore).toContain('!.env.example');
     expect(envExample).not.toContain('lbfumcrrfljmnucestvk');
     expect(envExample).not.toContain('sb_publishable_');
-    expect(envExample).not.toContain('SUPABASE_SERVICE_ROLE_KEY');
+    expect(envExample).toContain('SUPABASE_SERVICE_ROLE_KEY=\n');
+    expect(envExample).toContain('OWNER_BOOTSTRAP_TOKEN=\n');
+    expect(envExample).not.toMatch(/NEXT_PUBLIC_[A-Z0-9_]*(?:SERVICE_ROLE|TOKEN)=/);
   });
 });
 
