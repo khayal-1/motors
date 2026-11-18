@@ -1,0 +1,59 @@
+'use server';
+
+import { z } from 'zod';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import { supabaseEnv } from '@/lib/supabase/env';
+
+const emailSchema = z.string().trim().email().max(254);
+const passwordSchema = z.string().min(8).max(128);
+const authSchema = z.object({ email: emailSchema, password: passwordSchema });
+function value(formData: FormData, key: string) { const item = formData.get(key); return typeof item === 'string' ? item : ''; }
+
+export async function signInAction(formData: FormData) {
+  const parsed = authSchema.safeParse({ email: value(formData, 'email'), password: value(formData, 'password') });
+  if (!parsed.success) redirect('/auth/login?error=invalid');
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword(parsed.data);
+  if (error) redirect('/auth/login?error=credentials');
+  redirect('/admin');
+}
+
+export async function signUpAction(formData: FormData) {
+  const parsed = authSchema.extend({ name: z.string().trim().min(2).max(120) }).safeParse({ email: value(formData, 'email'), password: value(formData, 'password'), name: value(formData, 'name') });
+  if (!parsed.success) redirect('/auth/signup?error=invalid');
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: { data: { full_name: parsed.data.name }, emailRedirectTo: `${supabaseEnv.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/admin` },
+  });
+  if (error) redirect('/auth/signup?error=signup');
+  redirect('/auth/signup?sent=1');
+}
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const parsed = emailSchema.safeParse(value(formData, 'email'));
+  if (!parsed.success) redirect('/auth/forgot-password?error=invalid');
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, { redirectTo: `${supabaseEnv.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/auth/reset-password` });
+  if (error) redirect('/auth/forgot-password?error=request');
+  redirect('/auth/forgot-password?sent=1');
+}
+
+export async function updatePasswordAction(formData: FormData) {
+  const password = passwordSchema.safeParse(value(formData, 'password'));
+  if (!password.success) redirect('/auth/reset-password?error=invalid');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/login');
+  const { error } = await supabase.auth.updateUser({ password: password.data });
+  if (error) redirect('/auth/reset-password?error=update');
+  redirect('/admin');
+}
+
+export async function signOutAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect('/');
+}
