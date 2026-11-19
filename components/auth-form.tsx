@@ -19,12 +19,12 @@ export function AuthForm({ mode, error, sent, next = '/account' }: { mode: AuthM
       <label className="block text-sm">رقم الهاتف<input name="phone" type="tel" required autoComplete="tel" inputMode="tel" placeholder="01012345678" className={inputClass} /></label>
     </>}
     {(mode === 'login' || mode === 'signup' || mode === 'forgot') && <label className="block text-sm">{mode === 'login' ? 'البريد الإلكتروني أو الهاتف' : 'البريد الإلكتروني'}<input name={mode === 'login' ? 'identifier' : 'email'} type={mode === 'login' ? 'text' : 'email'} required autoComplete={mode === 'login' ? 'username' : 'email'} className={inputClass} /></label>}
-    {(mode === 'login' || mode === 'signup' || mode === 'reset') && <label className="block text-sm">كلمة المرور<input name="password" type="password" required minLength={mode === 'signup' ? 8 : 8} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} className={inputClass} /></label>}
+    {(mode === 'login' || mode === 'signup' || mode === 'reset') && <label className="block text-sm">كلمة المرور<input name="password" type="password" required minLength={8} maxLength={128} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} className={inputClass} /></label>}
     {mode === 'signup' && <>
       <label className="block text-sm">تأكيد كلمة المرور<input name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className={inputClass} /></label>
       <label className="flex items-start gap-3 text-sm leading-6 text-stone-300"><input name="acceptedTerms" type="checkbox" value="yes" required className="mt-1 size-4 accent-amber-400" /><span>أوافق على <Link className="text-amber-300 underline" href="/terms" target="_blank" rel="noopener noreferrer">شروط الاستخدام</Link> و<Link className="text-amber-300 underline" href="/privacy" target="_blank" rel="noopener noreferrer">سياسة الخصوصية</Link>.</span></label>
     </>}
-    {error === 'reserved' ? <p role="alert" className="text-sm text-red-300">هذا الرقم مخصص لحساب المالك ولا يمكن استخدامه لتسجيل عميل.</p> : error && <p role="alert" className="text-sm text-red-300">تعذّر إكمال الطلب. راجع البيانات وحاول مرة أخرى.</p>}
+    {error === 'reserved' ? <p role="alert" className="text-sm text-red-300">هذا الرقم مخصص لحساب المالك ولا يمكن استخدامه لتسجيل عميل.</p> : error === 'profile' ? <p role="alert" className="text-sm text-red-300">تم إنشاء الحساب لكن تعذّر حفظ ملف العميل. أعد المحاولة لاحقًا أو تواصل مع المعرض.</p> : error && <p role="alert" className="text-sm text-red-300">تعذّر إكمال الطلب. راجع البيانات وحاول مرة أخرى.</p>}
     {sent && <p role="status" className="text-sm text-emerald-300">لو كانت البيانات صالحة، ستصلك رسالة لإكمال الخطوة.</p>}
     <button className="w-full rounded-lg bg-amber-400 px-5 py-3 font-bold text-black">{copy[mode].submit}</button>
   </form>;

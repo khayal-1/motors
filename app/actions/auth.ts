@@ -65,20 +65,43 @@ export async function signUpAction(formData: FormData) {
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      data: {
-        account_type: 'customer',
-        first_name: parsed.data.firstName,
-        middle_name: parsed.data.middleName,
-        last_name: parsed.data.lastName,
-        full_name: `${parsed.data.firstName} ${parsed.data.middleName} ${parsed.data.lastName}`,
-        phone: parsed.data.phone,
-        terms_accepted: true,
-        terms_version: policyVersion,
-      },
+      // Keep only the non-personal account classification in Auth metadata.
+      // Customer name, phone, and consent are persisted in public.clients after Auth returns its id.
+      data: { account_type: 'customer' },
       emailRedirectTo: callbackUrl(next),
     },
   });
   if (error) redirect(`/auth/signup?error=signup&next=${encodeURIComponent(next)}`);
+  if (!data.user || (Array.isArray(data.user.identities) && data.user.identities.length === 0)) {
+    redirect(`/auth/signup?sent=1&next=${encodeURIComponent(next)}`);
+  }
+
+  // The Auth trigger creates the linked, empty clients row within the Auth transaction.
+  // Complete it server-side; the service-role key is never exposed to browser code.
+  let profileSaved = false;
+  try {
+    const admin = createAdminClient();
+    const { data: client, error: clientError } = await admin.from('clients').update({
+      name: `${parsed.data.firstName} ${parsed.data.middleName} ${parsed.data.lastName}`,
+      first_name: parsed.data.firstName,
+      middle_name: parsed.data.middleName,
+      last_name: parsed.data.lastName,
+      phone: parsed.data.phone,
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: policyVersion,
+    }).eq('user_id', data.user.id).select('user_id').maybeSingle();
+    if (!clientError && client) {
+      const { error: phoneIndexError } = await admin.from('phone_login_index').upsert({
+        phone: parsed.data.phone,
+        user_id: data.user.id,
+        login_email: parsed.data.email,
+      }, { onConflict: 'user_id' });
+      profileSaved = !phoneIndexError;
+    }
+  } catch {
+    profileSaved = false;
+  }
+  if (!profileSaved) redirect(`/auth/signup?error=profile&next=${encodeURIComponent(next)}`);
   if (data.session) redirect(next);
   redirect(`/auth/signup?sent=1&next=${encodeURIComponent(next)}`);
 }
