@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { supabaseEnv } from '@/lib/supabase/env';
 import { safeNextPath } from '@/lib/auth/redirect';
+import { saveCustomerSignupProfile } from '@/lib/auth/customer-signup-profile';
 import { customerSignupSchema, emailSchema, egyptianPhoneSchema, loginCredentials, passwordSchema, policyVersion } from '@/lib/auth/identity';
 
 const loginIdentifierSchema = z.string().trim().min(1).max(254);
@@ -60,6 +61,24 @@ export async function signUpAction(formData: FormData) {
   if (reservedOwnerPhone.success && reservedOwnerPhone.data === parsed.data.phone) {
     redirect(`/auth/signup?error=reserved&next=${encodeURIComponent(next)}`);
   }
+  // Do not create an Auth identity unless the customer tables needed to finish
+  // registration are present. This avoids orphaned, unprofiled accounts when a
+  // preview is pointed at a Supabase project whose migrations are not applied.
+  let admin: ReturnType<typeof createAdminClient> | null = null;
+  let setupReady = false;
+  try {
+    admin = createAdminClient();
+    const [clientsSchema, phoneIndexSchema] = await Promise.all([
+      admin.from('clients').select('user_id,name,first_name,middle_name,last_name,phone,terms_accepted_at,terms_version').limit(0),
+      admin.from('phone_login_index').select('phone,user_id,login_email').limit(0),
+    ]);
+    setupReady = !clientsSchema.error && !phoneIndexSchema.error;
+  } catch {
+    setupReady = false;
+  }
+  if (!admin || !setupReady) redirect(`/auth/signup?error=setup&next=${encodeURIComponent(next)}`);
+  const adminClient = admin;
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -76,31 +95,16 @@ export async function signUpAction(formData: FormData) {
     redirect(`/auth/signup?sent=1&next=${encodeURIComponent(next)}`);
   }
 
-  // The Auth trigger creates the linked, empty clients row within the Auth transaction.
-  // Complete it server-side; the service-role key is never exposed to browser code.
-  let profileSaved = false;
-  try {
-    const admin = createAdminClient();
-    const { data: client, error: clientError } = await admin.from('clients').update({
-      name: `${parsed.data.firstName} ${parsed.data.middleName} ${parsed.data.lastName}`,
-      first_name: parsed.data.firstName,
-      middle_name: parsed.data.middleName,
-      last_name: parsed.data.lastName,
-      phone: parsed.data.phone,
-      terms_accepted_at: new Date().toISOString(),
-      terms_version: policyVersion,
-    }).eq('user_id', data.user.id).select('user_id').maybeSingle();
-    if (!clientError && client) {
-      const { error: phoneIndexError } = await admin.from('phone_login_index').upsert({
-        phone: parsed.data.phone,
-        user_id: data.user.id,
-        login_email: parsed.data.email,
-      }, { onConflict: 'user_id' });
-      profileSaved = !phoneIndexError;
-    }
-  } catch {
-    profileSaved = false;
-  }
+  // Upsert the profile instead of assuming the Auth trigger seeded it. The
+  // project may still have an older trigger definition after a partial rollout.
+  const profileSaved = await saveCustomerSignupProfile(adminClient, data.user.id, {
+    email: parsed.data.email,
+    firstName: parsed.data.firstName,
+    middleName: parsed.data.middleName,
+    lastName: parsed.data.lastName,
+    phone: parsed.data.phone,
+    termsVersion: policyVersion,
+  }, new Date().toISOString());
   if (!profileSaved) redirect(`/auth/signup?error=profile&next=${encodeURIComponent(next)}`);
   if (data.session) redirect(next);
   redirect(`/auth/signup?sent=1&next=${encodeURIComponent(next)}`);
