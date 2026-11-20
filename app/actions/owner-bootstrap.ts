@@ -4,7 +4,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { egyptianPhoneSchema, personNamePart, policyVersion } from '@/lib/auth/identity';
+import { egyptianPhoneSchema, passwordSchema, personNamePart, policyVersion } from '@/lib/auth/identity';
 
 function value(formData: FormData, key: string): string {
   const field = formData.get(key);
@@ -26,8 +26,8 @@ export async function provisionInitialOwnerAction(formData: FormData) {
     firstName: personNamePart,
     middleName: personNamePart,
     lastName: personNamePart,
-    password: z.string().min(12).max(128),
-    confirmPassword: z.string().min(12).max(128),
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
   }).refine((input) => input.password === input.confirmPassword).safeParse({
     token: value(formData, 'token'),
     firstName: value(formData, 'firstName'),
