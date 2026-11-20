@@ -14,17 +14,19 @@ describe('auth identity inputs', () => {
   });
 
   it('selects email or normalized phone authentication without exposing account lookup data', () => {
-    expect(loginCredentials('person@example.com', 'pass12345')).toEqual({ email: 'person@example.com', password: 'pass12345' });
-    expect(loginCredentials('01012345678', 'pass12345')).toEqual({ phone: '+201012345678', password: 'pass12345' });
-    expect(loginCredentials('bad-phone', 'pass12345')).toBeNull();
+    expect(loginCredentials('person@example.com', 'pass12345678')).toEqual({ email: 'person@example.com', password: 'pass12345678' });
+    expect(loginCredentials('01012345678', 'pass12345678')).toEqual({ phone: '+201012345678', password: 'pass12345678' });
+    expect(loginCredentials('bad-phone', 'pass12345678')).toBeNull();
   });
 
   it('requires all three name parts, phone, email, matching passwords and explicit policy acceptance', () => {
-    const registration = { firstName: 'علي', middleName: 'حسن', lastName: 'محمد', phone: '01012345678', email: 'customer@example.com', password: 'password123', confirmPassword: 'password123', acceptedTerms: true };
+    const registration = { firstName: 'علي', middleName: 'حسن', lastName: 'محمد', phone: '01012345678', email: 'customer@example.com', password: 'password1234', confirmPassword: 'password1234', acceptedTerms: true };
     expect(customerSignupSchema.safeParse(registration).success).toBe(true);
     expect(customerSignupSchema.safeParse({ ...registration, middleName: '' }).success).toBe(false);
-    expect(customerSignupSchema.safeParse({ ...registration, confirmPassword: 'different123' }).success).toBe(false);
+    expect(customerSignupSchema.safeParse({ ...registration, confirmPassword: 'different1234' }).success).toBe(false);
     expect(customerSignupSchema.safeParse({ ...registration, acceptedTerms: false }).success).toBe(false);
+    // Reject passwords shorter than 12 characters
+    expect(customerSignupSchema.safeParse({ ...registration, password: 'shortpass', confirmPassword: 'shortpass' }).success).toBe(false);
   });
 
   it('requires one non-empty name part', () => {
