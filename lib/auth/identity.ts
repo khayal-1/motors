@@ -13,7 +13,7 @@ export const egyptianPhoneSchema = z.string().trim().transform(normalizePhone).p
 );
 export const personNamePart = z.string().trim().min(1).max(80).regex(/^[\p{L}\p{M}][\p{L}\p{M}'’ -]*$/u);
 export const emailSchema = z.string().trim().email().max(254);
-export const passwordSchema = z.string().min(8).max(128);
+export const passwordSchema = z.string().min(12).max(128);
 export const policyVersion = '2026-11-18-v1';
 
 export const customerSignupSchema = z.object({
